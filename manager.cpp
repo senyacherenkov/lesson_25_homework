@@ -1,34 +1,36 @@
+#include <cassert>
 #include "manager.h"
 
 namespace {
-    constexpr char OPEN_BRACKET = '{';
-    constexpr char CLOSE_BRACKET = '}';
-
     struct InputData {
         std::string mixedData;
         std::string nonmixedData;
     };
 
-    bool isDataWithBracket(std::string data) {
+    int isDataWithBracket(std::string data) {
+        std::string openBracketCommand("{\n");
         size_t pos = 0;
-        if((pos = data.find(OPEN_BRACKET)) != std::string::npos)
-            return true;
-        return false;
+        if((pos = data.find(openBracketCommand)) != std::string::npos)
+            return static_cast<int>(pos);
+        return -1;
     }
 
-    InputData extractDataInBracket(std::string data) {
-        InputData result;
-        size_t startPos = data.find(OPEN_BRACKET);
-        size_t endPos = data.find_last_of(CLOSE_BRACKET);
+    InputData extractDataInBracket(std::string data, int startPos) {
+        InputData result;        
+        std::string closeBracketCommand("}\n");
+        size_t endPos = 0;
+        if((endPos = data.find_last_of(closeBracketCommand)) == std::string::npos)
+            return result;
+
+        std::string extractedData = data.substr(static_cast<size_t>(startPos),
+                                                endPos - static_cast<size_t>(startPos) + closeBracketCommand.size() + 1);
+        result.nonmixedData = extractedData;
 
         std::string mixedDataPart1;
         std::string mixedDataPart2;
 
-        std::string extractedData = data.substr(startPos, endPos - startPos + 1);
-        result.nonmixedData = extractedData;
-
         if(startPos != 0)
-            mixedDataPart1 = data.substr(0, startPos);
+            mixedDataPart1 = data.substr(0, static_cast<size_t>(startPos));
 
         if(endPos != data.size() - 1)
             mixedDataPart2 = data.substr(endPos + 1);
@@ -102,12 +104,19 @@ void Manager::work(size_t handle, const char *data, std::size_t size)
     InputData tempData;
     tempData.mixedData = commands;
 
-    if(isDataWithBracket(commands)) {
-        tempData = extractDataInBracket(commands);
+    int posOfBracket = 0;
+    if((posOfBracket = isDataWithBracket(commands)) != -1 ) {
+        tempData = extractDataInBracket(commands, posOfBracket);
 
         std::unique_lock<std::mutex> guard{m_mutex};
-        size_t newContextId = start(std::next(m_contexts.begin(), static_cast<long>(handle))->m_bulkSize);
-        subroutine(newContextId, tempData.nonmixedData);
+        if(m_contexts.size() > 1) {
+            subroutine(m_contexts.size(), tempData.nonmixedData);
+        }
+        else {
+            guard.unlock();
+            size_t newContextId = start(std::next(m_contexts.begin(), static_cast<long>(handle))->m_bulkSize);
+            subroutine(newContextId, tempData.nonmixedData);
+        }
     }
 
     if(!tempData.mixedData.empty())

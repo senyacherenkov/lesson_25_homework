@@ -20,7 +20,7 @@ public:
 
   void start()
   {
-    m_context = async::connect(m_N);
+    async::connect(m_N);
     do_read();
   }
 
@@ -32,7 +32,7 @@ private:
         [this, self](boost::system::error_code ec, std::size_t length)
         {
           if (!ec)
-          {            
+          {
             async::receive(m_context, data_, length);
             memset(data_, 0, max_length);
 
