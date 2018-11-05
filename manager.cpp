@@ -17,14 +17,13 @@ namespace {
 
     InputData extractDataInBracket(std::string data, int startPos) {
         InputData result;        
-        std::string closeBracketCommand("}\n");
+        std::string closeBracketCommand("}");
         size_t endPos = 0;
         if((endPos = data.find_last_of(closeBracketCommand)) == std::string::npos)
             return result;
 
-        std::string extractedData = data.substr(static_cast<size_t>(startPos),
-                                                endPos - static_cast<size_t>(startPos) + closeBracketCommand.size() + 1);
-        result.nonmixedData = extractedData;
+        result.nonmixedData = data.substr(static_cast<size_t>(startPos),
+                                          endPos - static_cast<size_t>(startPos) + closeBracketCommand.size() + 1);
 
         std::string mixedDataPart1;
         std::string mixedDataPart2;
@@ -33,7 +32,7 @@ namespace {
             mixedDataPart1 = data.substr(0, static_cast<size_t>(startPos));
 
         if(endPos != data.size() - 1)
-            mixedDataPart2 = data.substr(endPos + 1);
+            mixedDataPart2 = data.substr(endPos + 2);
 
         result.mixedData = mixedDataPart1 + mixedDataPart2;
         return result;

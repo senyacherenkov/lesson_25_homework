@@ -58,6 +58,9 @@ void Reader::readCommands(const std::string& input)
         if(input == "{") {
             m_openBracketNumber++;
             if(!m_dynamicMode) {
+                m_threadData.m_nBlocks++;
+                m_threadData.m_nCommands += m_commands.size();
+                notifyObservers();
                 m_commands.clear();
                 m_dynamicMode = true;
             }
