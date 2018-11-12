@@ -20,7 +20,7 @@ public:
 
   void start()
   {
-    async::connect(m_N);
+    m_context = async::connect(m_N);
     do_read();
   }
 
@@ -28,24 +28,29 @@ private:
   void do_read()
   {
     auto self(shared_from_this());
-    socket_.async_read_some(boost::asio::buffer(data_, max_length),
+
+    socket_.async_read_some(boost::asio::buffer(data_, 1),
         [this, self](boost::system::error_code ec, std::size_t length)
         {
           if (!ec)
           {
-            async::receive(m_context, data_, length);
-            memset(data_, 0, max_length);
+              mixedData_.push_back(data_[0]);
 
-            do_read();
+              async::receive(0, mixedData_.data(), mixedData_.size());
+              mixedData_.clear();
+
+              do_read();
           }
         });
   }
 
   tcp::socket socket_;
-  enum { max_length = 10 };
+  enum { max_length = 1024 };
+  enum { data_limit = 2 };
   char data_[max_length];
+  std::vector<char> mixedData_;
   size_t m_N = 0;
-  handle_t m_context = 0;
+  handle_t m_context = 0;  
 };
 
 class server

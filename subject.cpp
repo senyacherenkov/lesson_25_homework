@@ -58,9 +58,6 @@ void Reader::readCommands(const std::string& input)
         if(input == "{") {
             m_openBracketNumber++;
             if(!m_dynamicMode) {
-                m_threadData.m_nBlocks++;
-                m_threadData.m_nCommands += m_commands.size();
-                notifyObservers();
                 m_commands.clear();
                 m_dynamicMode = true;
             }
@@ -75,25 +72,6 @@ void Reader::readCommands(const std::string& input)
            m_commands.clear();
         }
     }
-    else if(!m_commands.empty())
-    {
-        m_threadData.m_nBlocks++;
-        m_threadData.m_nCommands += m_commands.size();
-        notifyObservers();
-        m_commands.clear();
-
-    }
-    else
-    {
-        notifyObservers();
-    }
-
-
-    if(input.empty())
-    {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        std::cout << "main " << m_threadData;        
-    }    
 }
 
 void Reader::notifyObservers()

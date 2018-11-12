@@ -16,7 +16,8 @@
 struct Context {
     Context() = default;
     Context(size_t N):
-        m_reader(N)
+        m_reader(N),
+        m_bulkSize(N)
     {}
 
     std::string                     m_data;

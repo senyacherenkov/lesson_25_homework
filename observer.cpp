@@ -137,8 +137,6 @@ void Registrator::writeFileLog(std::string data, long time)
     nameOfFile += std::to_string(m_logCounter);
     nameOfFile += ".log";
 
-    m_fileNames.push_back(nameOfFile);
-
     std::ofstream bulkLog;
     bulkLog.open(nameOfFile.c_str());
     bulkLog << data;
@@ -153,10 +151,7 @@ void Registrator::printSummary(ThreadData &data)
 
 void Registrator::update(const std::vector<std::string> &newCommands, long time)
 {
-    if(newCommands.empty()) {        
-        m_isStopped.store(true, std::memory_order_relaxed);
-        m_fileCondition.notify_all();
-        m_stdoutCondition.notify_all();
+    if(newCommands.empty()) {
         return;
     }
 

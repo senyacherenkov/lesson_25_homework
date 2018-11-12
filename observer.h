@@ -25,8 +25,6 @@ public:
     ~Registrator() override;
     void update(const std::vector<std::string>& newCommands, long time) override;
 
-    std::vector<ThreadData>& getThreadData() { return m_threadDataBuff; }
-    std::vector<std::string>& getFileNames() { return m_fileNames; }
 private:
     void workerThread();
 
@@ -49,7 +47,6 @@ private:
     std::condition_variable                         m_stdoutCondition;
 
     std::size_t                                     m_logCounter;
-    std::vector<ThreadData>                         m_threadDataBuff;
-    std::vector<std::string>                        m_fileNames;
+    std::vector<ThreadData>                         m_threadDataBuff;    
 };
 
