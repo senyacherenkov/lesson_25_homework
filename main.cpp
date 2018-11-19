@@ -36,8 +36,10 @@ private:
           {
               mixedData_.push_back(data_[0]);
 
-              async::receive(0, mixedData_.data(), mixedData_.size());
-              mixedData_.clear();
+              if(data_[0] == '\n') {
+                  async::receive(0, mixedData_.data(), mixedData_.size());
+                  mixedData_.clear();
+              }
 
               do_read();
           }
