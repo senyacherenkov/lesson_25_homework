@@ -34,11 +34,32 @@ private:
         {
           if (!ec)
           {
-              mixedData_.push_back(data_[0]);
-
-              if(data_[0] == '\n') {
-                  async::receive(0, mixedData_.data(), mixedData_.size());
-                  mixedData_.clear();
+              if(data_[0] == '}')
+              {
+                  m_isBracketOver = true;
+                  nonMixedData_.push_back(data_[0]);
+              }
+              else if (!m_isBracketOver && (data_[0] == '{' || (!nonMixedData_.empty() && nonMixedData_[0] == '{')))
+              {
+                  nonMixedData_.push_back(data_[0]);
+              }
+              else if(data_[0] == '\n') {
+                  if(m_isBracketOver) {
+                     nonMixedData_.push_back(data_[0]);
+                     size_t handle = async::connect(m_N);
+                     async::receive(handle, nonMixedData_.data(), nonMixedData_.size());
+                     nonMixedData_.clear();
+                     m_isBracketOver = false;
+                     async::disconnect(handle);
+                  }
+                  else {
+                     mixedData_.push_back(data_[0]);
+                     async::receive(0, mixedData_.data(), mixedData_.size());
+                     mixedData_.clear();
+                  }
+              }
+              else {
+                  mixedData_.push_back(data_[0]);
               }
 
               do_read();
@@ -47,12 +68,13 @@ private:
   }
 
   tcp::socket socket_;
-  enum { max_length = 1024 };
-  enum { data_limit = 2 };
+  enum { max_length = 1024 };  
   char data_[max_length];
   std::vector<char> mixedData_;
+  std::vector<char> nonMixedData_;
   size_t m_N = 0;
-  handle_t m_context = 0;  
+  handle_t m_context = 0;
+  bool m_isBracketOver = false;
 };
 
 class server

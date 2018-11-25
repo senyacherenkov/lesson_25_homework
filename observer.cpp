@@ -46,10 +46,7 @@ Registrator::Registrator():
                                 size_t nCommands = task();
                                 threadData.m_nCommands += nCommands;
                             }
-                            m_threadDataBuff[i] = threadData;
-
-                            std::unique_lock<std::mutex> lck{m_fileMutex};
-                            printSummary(threadData);
+                            m_threadDataBuff[i] = threadData;                            
                         });
 
     m_stdOutWorker = std::thread(&Registrator::writeStdOuput, this);
@@ -124,8 +121,7 @@ void Registrator::writeStdOuput()
 
     m_threadDataBuff[2] = threadData;
 
-    std::unique_lock<std::mutex> lck{m_fileMutex};
-    printSummary(threadData);
+    std::unique_lock<std::mutex> lck{m_fileMutex};    
 }
 
 void Registrator::writeFileLog(std::string data, long time)

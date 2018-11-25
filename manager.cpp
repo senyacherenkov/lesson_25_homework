@@ -1,43 +1,5 @@
 #include "manager.h"
 
-namespace {
-    constexpr char OPEN_BRACKET = '{';
-    constexpr char CLOSE_BRACKET = '}';
-
-    struct InputData {
-        std::string mixedData;
-        std::string nonmixedData;
-    };
-
-    bool isDataWithBracket(std::string data) {
-        size_t pos = 0;
-        if((pos = data.find(OPEN_BRACKET)) != std::string::npos)
-            return true;
-        return false;
-    }
-
-    InputData extractDataInBracket(std::string data) {
-        InputData result;
-        size_t startPos = data.find(OPEN_BRACKET);
-        size_t endPos = data.find_last_of(CLOSE_BRACKET);
-
-        std::string mixedDataPart1;
-        std::string mixedDataPart2;
-
-        std::string extractedData = data.substr(startPos, endPos - startPos + 1);
-        result.nonmixedData = extractedData;
-
-        if(startPos != 0)
-            mixedDataPart1 = data.substr(0, startPos);
-
-        if(endPos != data.size() - 1)
-            mixedDataPart2 = data.substr(endPos + 1);
-
-        result.mixedData = mixedDataPart1 + mixedDataPart2;
-        return result;
-    }
-}
-
 Manager::Manager()
 {}
 
@@ -76,9 +38,11 @@ size_t Manager::start(size_t N)
    return m_contexts.size() - 1;
 }
 
-void Manager::subroutine(size_t handle, std::string& commands)
+void Manager::work(size_t handle, const char *data, std::size_t size)
 {
+    assert(handle <= m_contexts.size());
     std::unique_lock<std::mutex> guard{m_mutex};
+    std::string commands = std::string(data, size);
     std::next(m_contexts.begin(), static_cast<long>(handle))->m_data += commands;
 
     if(commands[commands.size() - 1] == escChar)
@@ -93,25 +57,6 @@ void Manager::subroutine(size_t handle, std::string& commands)
         guard.lock();
         std::next(m_contexts.begin(), static_cast<long>(handle))->m_data.clear();
     }
-}
-
-void Manager::work(size_t handle, const char *data, std::size_t size)
-{
-    assert(handle <= m_contexts.size());    
-    std::string commands = std::string(data, size);
-    InputData tempData;
-    tempData.mixedData = commands;
-
-    if(isDataWithBracket(commands)) {
-        tempData = extractDataInBracket(commands);
-
-        std::unique_lock<std::mutex> guard{m_mutex};
-        size_t newContextId = start(std::next(m_contexts.begin(), static_cast<long>(handle))->m_bulkSize);
-        subroutine(newContextId, tempData.nonmixedData);
-    }
-
-    if(!tempData.mixedData.empty())
-        subroutine(handle, tempData.mixedData); //if string with data is empty it triggers stop condition
 }
 
 void Manager::stop(size_t handle)
